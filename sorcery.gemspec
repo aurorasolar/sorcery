@@ -21,6 +21,7 @@ Gem::Specification.new do |s|
   s.add_dependency "oauth", "~> 0.4", ">= 0.4.4"
   s.add_dependency "oauth2", ">= 0.8.0"
   s.add_dependency "bcrypt", "~> 3.1"
+  s.add_dependency "openid_connect", ">= 0.9.2"
 
   s.add_development_dependency "abstract", ">= 1.0.0"
   s.add_development_dependency "json", ">= 1.7.7"

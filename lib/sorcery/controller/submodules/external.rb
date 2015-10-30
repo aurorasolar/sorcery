@@ -19,6 +19,7 @@ module Sorcery
           require 'sorcery/providers/google'
           require 'sorcery/providers/jira'
           require 'sorcery/providers/salesforce'
+          require 'sorcery/providers/openid_connect'
 
           Config.module_eval do
             class << self
@@ -121,6 +122,12 @@ module Sorcery
               return_to_url = session[:return_to_url]
               reset_sorcery_session
               session[:return_to_url] = return_to_url
+
+              config = user_class.sorcery_config
+              if config.update_access_token
+                user.send (config.access_token_attribute_name+'=').to_sym, @user_hash[:access_token]
+                user.save!(:validate => false)
+              end
 
               # sign in the user
               auto_login(user, should_remember)

@@ -69,6 +69,7 @@ describe SorceryController, :active_record => true do
 
     before(:each) do
       stub_all_oauth2_requests!
+      stub_all_openid_connect_requests!
     end
 
     after(:each) do
@@ -152,7 +153,7 @@ describe SorceryController, :active_record => true do
       expect(flash[:notice]).to eq "Success!"
     end
 
-    [:github, :google, :liveid, :vk, :salesforce].each do |provider|
+    [:github, :google, :liveid, :vk, :salesforce, :openid_connect].each do |provider|
 
       describe "with #{provider}" do
 
@@ -394,8 +395,39 @@ describe SorceryController, :active_record => true do
     allow_any_instance_of(OAuth2::Strategy::AuthCode).to receive(:get_token) { access_token }
   end
 
+  def stub_all_openid_connect_requests!
+    
+    # Id token
+    id_token = double(OpenIDConnect::ResponseObject::IdToken)
+    allow(id_token).to receive(:sub).and_return('123')    
+    allow(id_token).to receive(:raw_attributes) {
+       {
+         iss: 'accounts.google.com',
+         aud: '999220227102-jr200rnb4inkmln67vvo56kf86i1bnch.apps.googleusercontent.com',
+         sub: '123',
+         azp: '999220227102-jr200rnb4inkmln67vvo56kf86i1bnch.apps.googleusercontent.com',
+         iat: 1443571350,
+         exp: 1443574950
+       }
+    }
+    allow(OpenIDConnect::ResponseObject::IdToken).to receive(:decode).with(any_args).and_return(id_token)
+    
+    # Access token
+    access_token = double(OpenIDConnect::AccessToken)
+    allow(access_token).to receive(:access_token) {
+      'access_token_key'
+    }    
+    allow(access_token).to receive(:id_token) {
+      'id_token'
+    }    
+
+    allow_any_instance_of(Sorcery::Providers::Openid_connect).to receive(:get_public_keys) { nil }
+    allow_any_instance_of(OpenIDConnect::Client).to receive(:access_token!).and_return(access_token)      
+    allow_any_instance_of(OpenIDConnect::Client).to receive(:authorization_code=) { nil }    
+  end
+
   def set_external_property
-    sorcery_controller_property_set(:external_providers, [:facebook, :github, :google, :liveid, :vk, :salesforce])
+    sorcery_controller_property_set(:external_providers, [:facebook, :github, :google, :liveid, :vk, :salesforce, :openid_connect])
     sorcery_controller_external_property_set(:facebook, :key, "eYVNBjBDi33aa9GkA3w")
     sorcery_controller_external_property_set(:facebook, :secret, "XpbeSdCoaKSmQGSeokz5qcUATClRW5u08QWNfv71N8")
     sorcery_controller_external_property_set(:facebook, :callback_url, "http://blabla.com")
@@ -414,6 +446,14 @@ describe SorceryController, :active_record => true do
     sorcery_controller_external_property_set(:salesforce, :key, "eYVNBjBDi33aa9GkA3w")
     sorcery_controller_external_property_set(:salesforce, :secret, "XpbeSdCoaKSmQGSeokz5qcUATClRW5u08QWNfv71N8")
     sorcery_controller_external_property_set(:salesforce, :callback_url, "http://blabla.com")
+    
+    sorcery_controller_external_property_set(:openid_connect, :key, "999220227102-1us4vq0k6t0orb3hoqepftd5u8ef8vec.apps.googleusercontent.com")
+    sorcery_controller_external_property_set(:openid_connect, :secret, "Y0qFZfsjzTQbQSSc2dPVMTbb")
+    sorcery_controller_external_property_set(:openid_connect, :callback_url, "http://blabla.com")
+    sorcery_controller_external_property_set(:openid_connect, :auth_path, "https://accounts.google.com/o/oauth2/auth")
+    sorcery_controller_external_property_set(:openid_connect, :token_url, "https://accounts.google.com/o/oauth2/token")
+    
+    
   end
 
   def provider_url(provider)
@@ -422,7 +462,8 @@ describe SorceryController, :active_record => true do
       google: "https://accounts.google.com/o/oauth2/auth?client_id=#{::Sorcery::Controller::Config.google.key}&display=&redirect_uri=http%3A%2F%2Fblabla.com&response_type=code&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.profile&state=",
       liveid: "https://oauth.live.com/authorize?client_id=#{::Sorcery::Controller::Config.liveid.key}&display=&redirect_uri=http%3A%2F%2Fblabla.com&response_type=code&scope=wl.basic+wl.emails+wl.offline_access&state=",
       vk: "https://oauth.vk.com/authorize?client_id=#{::Sorcery::Controller::Config.vk.key}&display=&redirect_uri=http%3A%2F%2Fblabla.com&response_type=code&scope=#{::Sorcery::Controller::Config.vk.scope}&state=",
-      salesforce: "https://login.salesforce.com/services/oauth2/authorize?client_id=#{::Sorcery::Controller::Config.salesforce.key}&display=&redirect_uri=http%3A%2F%2Fblabla.com&response_type=code&scope=#{::Sorcery::Controller::Config.salesforce.scope}&state="
+      salesforce: "https://login.salesforce.com/services/oauth2/authorize?client_id=#{::Sorcery::Controller::Config.salesforce.key}&display=&redirect_uri=http%3A%2F%2Fblabla.com&response_type=code&scope=#{::Sorcery::Controller::Config.salesforce.scope}&state=",
+      openid_connect: "https://accounts.google.com/o/oauth2/auth?client_id=#{::Sorcery::Controller::Config.openid_connect.key}&redirect_uri=http%3A%2F%2Fblabla.com&response_type=code&scope=openid"
     }[provider]
   end
 end
