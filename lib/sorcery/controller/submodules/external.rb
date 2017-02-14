@@ -87,7 +87,7 @@ module Sorcery
             @user_hash ||= @provider.get_user_hash(@access_token) # uses the token to send another request to the oauth agent requesting user info
 
             # Log who the user is, that tries to login
-            Rails.logger.info("Sorcery - Attempted User Login. Provider: #{@provider} - Params: #{@user_hash}")
+            Rails.logger.warn("Sorcery - Attempted User Login. Provider: #{@provider} - Params: #{@user_hash}")
             return @user_hash
           end
 
