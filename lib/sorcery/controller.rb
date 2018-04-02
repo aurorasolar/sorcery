@@ -16,12 +16,12 @@ module Sorcery
     end
 
     module InstanceMethods
-      # To be used as before_filter.
+      # To be used as before_action.
       # Will trigger auto-login attempts via the call to logged_in?
       # If all attempts to auto-login fail, the failure callback will be called.
       def require_login
         if !logged_in?
-          session[:return_to_url] = request.url if Config.save_return_to_url && request.get?
+          session[:return_to_url] = request.url if Config.save_return_to_url && request.get? && !request.xhr?
           self.send(Config.not_authenticated_action)
         end
       end

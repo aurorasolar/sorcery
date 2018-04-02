@@ -84,7 +84,7 @@ describe SorceryController, :active_record => true do
       it "login_at redirects correctly" do
         get :login_at_test_facebook
         expect(response).to be_a_redirect
-        expect(response).to redirect_to("https://www.facebook.com/dialog/oauth?client_id=#{::Sorcery::Controller::Config.facebook.key}&display=page&redirect_uri=http%3A%2F%2Ftest.host%2Foauth%2Ftwitter%2Fcallback&response_type=code&scope=email&state=")
+        expect(response).to redirect_to("https://www.facebook.com/dialog/oauth?client_id=#{::Sorcery::Controller::Config.facebook.key}&display=page&redirect_uri=http%3A%2F%2Ftest.host%2Foauth%2Ftwitter%2Fcallback&response_type=code&scope=email&state")
       end
 
       it "logins with state" do
@@ -105,7 +105,7 @@ describe SorceryController, :active_record => true do
         expect(response).to redirect_to("https://www.facebook.com/v2.2/dialog/oauth?client_id=#{::Sorcery::Controller::Config.facebook.key}&display=page&redirect_uri=http%3A%2F%2Ftest.host%2Foauth%2Ftwitter%2Fcallback&response_type=code&scope=email&state=bla")
 
         get :login_at_test_facebook
-        expect(response).to redirect_to("https://www.facebook.com/v2.2/dialog/oauth?client_id=#{::Sorcery::Controller::Config.facebook.key}&display=page&redirect_uri=http%3A%2F%2Ftest.host%2Foauth%2Ftwitter%2Fcallback&response_type=code&scope=email&state=")
+        expect(response).to redirect_to("https://www.facebook.com/v2.2/dialog/oauth?client_id=#{::Sorcery::Controller::Config.facebook.key}&display=page&redirect_uri=http%3A%2F%2Ftest.host%2Foauth%2Ftwitter%2Fcallback&response_type=code&scope=email&state")
       end
 
       after do
@@ -118,7 +118,7 @@ describe SorceryController, :active_record => true do
         create_new_user
         get :login_at_test_facebook
         expect(response).to be_a_redirect
-        expect(response).to redirect_to("https://www.facebook.com/v2.2/dialog/oauth?client_id=#{::Sorcery::Controller::Config.facebook.key}&display=page&redirect_uri=http%3A%2F%2Ftest.host%2Foauth%2Ftwitter%2Fcallback&response_type=code&scope=email&state=")
+        expect(response).to redirect_to("https://www.facebook.com/v2.2/dialog/oauth?client_id=#{::Sorcery::Controller::Config.facebook.key}&display=page&redirect_uri=http%3A%2F%2Ftest.host%2Foauth%2Ftwitter%2Fcallback&response_type=code&scope=email&state")
       end
     end
 
@@ -153,7 +153,7 @@ describe SorceryController, :active_record => true do
       expect(flash[:notice]).to eq "Success!"
     end
 
-    [:github, :google, :liveid, :vk, :salesforce, :openid_connect].each do |provider|
+    [:github, :google, :liveid, :vk, :salesforce, :paypal, :openid_connect].each do |provider|
 
       describe "with #{provider}" do
 
@@ -206,7 +206,7 @@ describe SorceryController, :active_record => true do
       end
 
       sorcery_reload!([:user_activation,:external], :user_activation_mailer => ::SorceryMailer)
-      sorcery_controller_property_set(:external_providers, [:facebook, :github, :google, :liveid, :vk, :salesforce])
+      sorcery_controller_property_set(:external_providers, [:facebook, :github, :google, :liveid, :vk, :salesforce, :paypal])
 
       sorcery_controller_external_property_set(:facebook, :key, "eYVNBjBDi33aa9GkA3w")
       sorcery_controller_external_property_set(:facebook, :secret, "XpbeSdCoaKSmQGSeokz5qcUATClRW5u08QWNfv71N8")
@@ -226,6 +226,9 @@ describe SorceryController, :active_record => true do
       sorcery_controller_external_property_set(:salesforce, :key, "eYVNBjBDi33aa9GkA3w")
       sorcery_controller_external_property_set(:salesforce, :secret, "XpbeSdCoaKSmQGSeokz5qcUATClRW5u08QWNfv71N8")
       sorcery_controller_external_property_set(:salesforce, :callback_url, "http://blabla.com")
+      sorcery_controller_external_property_set(:paypal, :key, "eYVNBjBDi33aa9GkA3w")
+      sorcery_controller_external_property_set(:paypal, :secret, "XpbeSdCoaKSmQGSeokz5qcUATClRW5u08QWNfv71N8")
+      sorcery_controller_external_property_set(:paypal, :callback_url, "http://blabla.com")
     end
 
     after(:all) do
@@ -254,7 +257,7 @@ describe SorceryController, :active_record => true do
       expect(ActionMailer::Base.deliveries.size).to eq old_size
     end
 
-    [:github, :google, :liveid, :vk, :salesforce].each do |provider|
+    [:github, :google, :liveid, :vk, :salesforce, :paypal].each do |provider|
       it "does not send activation email to external users (#{provider})" do
         old_size = ActionMailer::Base.deliveries.size
         create_new_external_user provider
@@ -427,7 +430,7 @@ describe SorceryController, :active_record => true do
   end
 
   def set_external_property
-    sorcery_controller_property_set(:external_providers, [:facebook, :github, :google, :liveid, :vk, :salesforce, :openid_connect])
+    sorcery_controller_property_set(:external_providers, [:facebook, :github, :google, :liveid, :vk, :salesforce, :paypal, :openid_connect])
     sorcery_controller_external_property_set(:facebook, :key, "eYVNBjBDi33aa9GkA3w")
     sorcery_controller_external_property_set(:facebook, :secret, "XpbeSdCoaKSmQGSeokz5qcUATClRW5u08QWNfv71N8")
     sorcery_controller_external_property_set(:facebook, :callback_url, "http://blabla.com")
@@ -446,25 +449,25 @@ describe SorceryController, :active_record => true do
     sorcery_controller_external_property_set(:salesforce, :key, "eYVNBjBDi33aa9GkA3w")
     sorcery_controller_external_property_set(:salesforce, :secret, "XpbeSdCoaKSmQGSeokz5qcUATClRW5u08QWNfv71N8")
     sorcery_controller_external_property_set(:salesforce, :callback_url, "http://blabla.com")
-    
     sorcery_controller_external_property_set(:openid_connect, :key, "999220227102-1us4vq0k6t0orb3hoqepftd5u8ef8vec.apps.googleusercontent.com")
     sorcery_controller_external_property_set(:openid_connect, :secret, "Y0qFZfsjzTQbQSSc2dPVMTbb")
     sorcery_controller_external_property_set(:openid_connect, :callback_url, "http://blabla.com")
     sorcery_controller_external_property_set(:openid_connect, :auth_path, "https://accounts.google.com/o/oauth2/auth")
     sorcery_controller_external_property_set(:openid_connect, :token_url, "https://accounts.google.com/o/oauth2/token")
-    
-    
+    sorcery_controller_external_property_set(:paypal, :key, "eYVNBjBDi33aa9GkA3w")
+    sorcery_controller_external_property_set(:paypal, :secret, "XpbeSdCoaKSmQGSeokz5qcUATClRW5u08QWNfv71N8")
+    sorcery_controller_external_property_set(:paypal, :callback_url, "http://blabla.com")
   end
 
   def provider_url(provider)
     {
-      github: "https://github.com/login/oauth/authorize?client_id=#{::Sorcery::Controller::Config.github.key}&display=&redirect_uri=http%3A%2F%2Fblabla.com&response_type=code&scope=&state=",
-      google: "https://accounts.google.com/o/oauth2/auth?client_id=#{::Sorcery::Controller::Config.google.key}&display=&redirect_uri=http%3A%2F%2Fblabla.com&response_type=code&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.profile&state=",
-      liveid: "https://oauth.live.com/authorize?client_id=#{::Sorcery::Controller::Config.liveid.key}&display=&redirect_uri=http%3A%2F%2Fblabla.com&response_type=code&scope=wl.basic+wl.emails+wl.offline_access&state=",
-      vk: "https://oauth.vk.com/authorize?client_id=#{::Sorcery::Controller::Config.vk.key}&display=&redirect_uri=http%3A%2F%2Fblabla.com&response_type=code&scope=#{::Sorcery::Controller::Config.vk.scope}&state=",
-      salesforce: "https://login.salesforce.com/services/oauth2/authorize?client_id=#{::Sorcery::Controller::Config.salesforce.key}&display=&redirect_uri=http%3A%2F%2Fblabla.com&response_type=code&scope=#{::Sorcery::Controller::Config.salesforce.scope}&state=",
-      openid_connect: "https://accounts.google.com/o/oauth2/auth?client_id=#{::Sorcery::Controller::Config.openid_connect.key}&redirect_uri=http%3A%2F%2Fblabla.com&response_type=code&scope=openid"
+      openid_connect: "https://accounts.google.com/o/oauth2/auth?client_id=#{::Sorcery::Controller::Config.openid_connect.key}&redirect_uri=http%3A%2F%2Fblabla.com&response_type=code&scope=openid",
+      github: "https://github.com/login/oauth/authorize?client_id=#{::Sorcery::Controller::Config.github.key}&display&redirect_uri=http%3A%2F%2Fblabla.com&response_type=code&scope&state",
+      paypal: "https://www.paypal.com/webapps/auth/protocol/openidconnect/v1/authorize?client_id=#{::Sorcery::Controller::Config.paypal.key}&display&redirect_uri=http%3A%2F%2Fblabla.com&response_type=code&scope=openid+email&state",
+      google: "https://accounts.google.com/o/oauth2/auth?client_id=#{::Sorcery::Controller::Config.google.key}&display&redirect_uri=http%3A%2F%2Fblabla.com&response_type=code&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.profile&state",
+      liveid: "https://oauth.live.com/authorize?client_id=#{::Sorcery::Controller::Config.liveid.key}&display&redirect_uri=http%3A%2F%2Fblabla.com&response_type=code&scope=wl.basic+wl.emails+wl.offline_access&state",
+      vk: "https://oauth.vk.com/authorize?client_id=#{::Sorcery::Controller::Config.vk.key}&display&redirect_uri=http%3A%2F%2Fblabla.com&response_type=code&scope=#{::Sorcery::Controller::Config.vk.scope}&state",
+      salesforce: "https://login.salesforce.com/services/oauth2/authorize?client_id=#{::Sorcery::Controller::Config.salesforce.key}&display&redirect_uri=http%3A%2F%2Fblabla.com&response_type=code&scope#{'=' + ::Sorcery::Controller::Config.salesforce.scope unless ::Sorcery::Controller::Config.salesforce.scope.nil?}&state"
     }[provider]
   end
 end
-

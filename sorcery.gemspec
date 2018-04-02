@@ -10,13 +10,15 @@ Gem::Specification.new do |s|
   s.description = "Provides common authentication needs such as signing in/out, activating by email and resetting password."
   s.summary = "Magical authentication for Rails 3 & 4 applications"
   s.homepage = "http://github.com/NoamB/sorcery"
+  s.post_install_message = "As of version 1.0 oauth/oauth2 won't be automatically bundled\n"
+  s.post_install_message += "you need to add those dependencies to your Gemfile"
 
   s.files         = `git ls-files`.split($/)
   s.require_paths = ["lib"]
 
   s.licenses = ["MIT"]
 
-  s.required_ruby_version = '>= 1.9.3'
+  s.required_ruby_version = '>= 2.0.0'
 
   s.add_dependency "oauth", "~> 0.4", ">= 0.4.4"
   s.add_dependency "oauth2", ">= 0.8.0"
@@ -29,7 +31,8 @@ Gem::Specification.new do |s|
 
   s.add_development_dependency "timecop"
   s.add_development_dependency "simplecov", ">= 0.3.8"
-  s.add_development_dependency "rspec", "~> 3.0.0"
-  s.add_development_dependency "rspec-rails", "~> 3.0.0"
+  s.add_development_dependency "rspec", "~> 3.1.0"
+  s.add_development_dependency "rspec-rails", "~> 3.1.0"
+  s.add_development_dependency "test-unit", "~> 3.1.0"
 end
 

@@ -34,7 +34,7 @@ module Sorcery
           Config.after_login    << :register_login_time_to_db
           Config.after_login    << :register_last_ip_address
           Config.before_logout  << :register_logout_time_to_db
-          base.after_filter :register_last_activity_time_to_db
+          base.after_action :register_last_activity_time_to_db
         end
 
         module InstanceMethods
@@ -66,7 +66,7 @@ module Sorcery
           # This runs as a hook just after a successful login.
           def register_last_ip_address(user, credentials)
             return unless Config.register_last_ip_address
-            current_user.set_last_ip_addess(request.remote_ip)
+            current_user.set_last_ip_address(request.remote_ip)
           end
         end
       end

@@ -3,8 +3,8 @@ require 'oauth'
 class SorceryController < ActionController::Base
   protect_from_forgery
 
-  before_filter :require_login_from_http_basic, only: [:test_http_basic_auth]
-  before_filter :require_login, only: [:test_logout, :test_logout_with_force_forget_me, :test_should_be_logged_in, :some_action]
+  before_action :require_login_from_http_basic, only: [:test_http_basic_auth]
+  before_action :require_login, only: [:test_logout, :test_logout_with_force_forget_me, :test_should_be_logged_in, :some_action]
 
   def index
   end
@@ -97,6 +97,10 @@ class SorceryController < ActionController::Base
     login_at(:github)
   end
 
+  def login_at_test_paypal
+    login_at(:paypal)
+  end
+
   def login_at_test_google
     login_at(:google)
   end
@@ -145,6 +149,14 @@ class SorceryController < ActionController::Base
 
   def test_login_from_github
     if @user = login_from(:github)
+      redirect_to 'bla', notice: 'Success!'
+    else
+      redirect_to 'blu', alert: 'Failed!'
+    end
+  end
+
+  def test_login_from_paypal
+    if @user = login_from(:paypal)
       redirect_to 'bla', notice: 'Success!'
     else
       redirect_to 'blu', alert: 'Failed!'
@@ -228,6 +240,14 @@ class SorceryController < ActionController::Base
 
   def test_return_to_with_external_github
     if @user = login_from(:github)
+      redirect_back_or_to 'bla', notice: 'Success!'
+    else
+      redirect_to 'blu', alert: 'Failed!'
+    end
+  end
+
+  def test_return_to_with_external_paypal
+    if @user = login_from(:paypal)
       redirect_back_or_to 'bla', notice: 'Success!'
     else
       redirect_to 'blu', alert: 'Failed!'

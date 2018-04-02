@@ -20,6 +20,7 @@ module Sorcery
           require 'sorcery/providers/jira'
           require 'sorcery/providers/salesforce'
           require 'sorcery/providers/openid_connect'
+          require 'sorcery/providers/paypal'
 
           Config.module_eval do
             class << self
