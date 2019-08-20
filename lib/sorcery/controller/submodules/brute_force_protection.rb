@@ -10,13 +10,16 @@ module Sorcery
       module BruteForceProtection
         def self.included(base)
           base.send(:include, InstanceMethods)
-
-          Config.after_login << :reset_failed_logins_count!
-          Config.after_failed_login << :update_failed_logins_count!
+          # FIXME: There is likely a more elegant way to safeguard these callbacks.
+          unless Config.after_login.include?(:reset_failed_logins_count!)
+            Config.after_login << :reset_failed_logins_count!
+          end
+          unless Config.after_failed_login.include?(:update_failed_logins_count!)
+            Config.after_failed_login << :update_failed_logins_count!
+          end
         end
 
         module InstanceMethods
-
           protected
 
           # Increments the failed logins counter on every failed login.
@@ -28,7 +31,7 @@ module Sorcery
 
           # Resets the failed logins counter.
           # Runs as a hook after a successful login.
-          def reset_failed_logins_count!(user, credentials)
+          def reset_failed_logins_count!(user, _credentials)
             user.sorcery_adapter.update_attribute(user_class.sorcery_config.failed_logins_count_attribute_name, 0)
           end
         end
