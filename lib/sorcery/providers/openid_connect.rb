@@ -8,7 +8,7 @@ module Sorcery
     #   config.github.secret = <secret>
     #   ...
     #
-    class OpenidConnect < Base
+    class Openid_connect < Base
 
 
       attr_accessor :auth_path, :scope, :token_url, :user_info_path,
@@ -120,6 +120,9 @@ module Sorcery
         )
         return client
       end
+    end
+
+    class OpenidConnect < Openid_connect
     end
   end
 end
