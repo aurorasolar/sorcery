@@ -1,14 +1,87 @@
 # Changelog
+## HEAD
 
-## 1.0 (not released yet)
+## 0.14.0
+
+* Update LinkedIn to use OAuth 2 [#189](https://github.com/Sorcery/sorcery/pull/189)
+* Support the LINE login auth [#80](https://github.com/Sorcery/sorcery/pull/80)
+* Allow BCrypt to have app-specific secret token [#173](https://github.com/Sorcery/sorcery/pull/173)
+* Add #change_password method to reset_password module. [#165](https://github.com/Sorcery/sorcery/pull/165)
+* Clean up initializer comments [#153](https://github.com/Sorcery/sorcery/pull/153)
+* Allow load_from_magic_login_token to accept a block [#152](https://github.com/Sorcery/sorcery/pull/152)
+* Fix CipherError class name [#142](https://github.com/Sorcery/sorcery/pull/142)
+* Fix `update_failed_logins_count` being called twice when login failed [#163](https://github.com/Sorcery/sorcery/pull/163)
+* Update migration templates to use new hash syntax [#170](https://github.com/Sorcery/sorcery/pull/170)
+* Support for Rails 4.2 and lower soft-dropped [#171](https://github.com/Sorcery/sorcery/pull/171)
+
+## 0.13.0
+
+* Add support for Rails 5.2 / Ruby 2.5 [#129](https://github.com/Sorcery/sorcery/pull/129)
+* Fix migration files not being generated [#128](https://github.com/Sorcery/sorcery/pull/128)
+* Add support for ActionController::API [#133](https://github.com/Sorcery/sorcery/pull/133), [#150](https://github.com/Sorcery/sorcery/pull/150), [#159](https://github.com/Sorcery/sorcery/pull/159)
+* Update activation email to use after_commit callback [#130](https://github.com/Sorcery/sorcery/pull/130)
+* Add opt-in `invalidate_active_sessions!` method [#110](https://github.com/Sorcery/sorcery/pull/110)
+* Pass along `remember_me` to `#auto_login` [#136](https://github.com/Sorcery/sorcery/pull/136)
+* Respect SessionTimeout on login via RememberMe [#102](https://github.com/Sorcery/sorcery/pull/102)
+* Added `demodulize` on authentication class name association name fetch [#147](https://github.com/Sorcery/sorcery/pull/147)
+* Remove Gemnasium badge [#140](https://github.com/Sorcery/sorcery/pull/140)
+* Add Instragram provider [#51](https://github.com/Sorcery/sorcery/pull/51)
+* Remove `publish_actions` permission for facebook [#139](https://github.com/Sorcery/sorcery/pull/139)
+* Prepare for 1.0.0 [#157](https://github.com/Sorcery/sorcery/pull/157)
+* Add Auth0 provider [#160](https://github.com/Sorcery/sorcery/pull/160)
+
+## 0.12.0
+
+* Fix magic_login not inheriting from migration_class_name [#99](https://github.com/Sorcery/sorcery/pull/99)
+* Update YARD dependency [#100](https://github.com/Sorcery/sorcery/pull/100)
+* Make `#update_attributes` behave like `#update` [#98](https://github.com/Sorcery/sorcery/pull/98)
+* Add tests to the magic login submodule [#95](https://github.com/Sorcery/sorcery/pull/95)
+* Set user.stretches to 1 in test env by default [#81](https://github.com/Sorcery/sorcery/pull/81)
+* Allow user to be loaded from other source when session expires. fix #89 [#94](https://github.com/Sorcery/sorcery/pull/94)
+* Added a new ArgumentError for not defined user_class in config [#82](https://github.com/Sorcery/sorcery/pull/82)
+* Updated Required Ruby version to 2.2 [#85](https://github.com/Sorcery/sorcery/pull/85)
+* Add configuration for token randomness [#67](https://github.com/Sorcery/sorcery/pull/67)
+* Add facebook user_info_path option to initializer.rb [#63](https://github.com/Sorcery/sorcery/pull/63)
+* Add new function: `build_from` (allows building a user instance from OAuth without saving) [#54](https://github.com/Sorcery/sorcery/pull/54)
+* Add rubocop configuration and TODO list [#107](https://github.com/Sorcery/sorcery/pull/107)
+* Add support for VK OAuth (thanks to @Hirurg103) [#109](https://github.com/Sorcery/sorcery/pull/109)
+* Fix token leak via referrer header [#56](https://github.com/Sorcery/sorcery/pull/56)
+* Add `login_user` helper for request specs [#57](https://github.com/Sorcery/sorcery/pull/57)
+
+## 0.11.0
+
+* Refer to User before calling remove_const to avoid NameError [#58](https://github.com/Sorcery/sorcery/pull/58)
+* Resurrect block authentication, showing auth failure reason. [#41](https://github.com/Sorcery/sorcery/pull/41)
+* Add github scope option to initializer.rb [#50](https://github.com/Sorcery/sorcery/pull/50)
+* Fix Facebook being broken due to API deprecation [#53](https://github.com/Sorcery/sorcery/pull/53)
+
+## 0.10.3
+
+* Revert removal of MongoID Adapter (breaks Sorcery for MongoID users until separate gem is created) [#45](https://github.com/Sorcery/sorcery/pull/45)
+
+## 0.10.2
+
+* Added support for Microsoft OAuth (thanks to @athix) [#37](https://github.com/Sorcery/sorcery/pull/37)
+
+## 0.10.1
+
+* Fixed LinkedIn bug [#36](https://github.com/Sorcery/sorcery/pull/36)
+
+## 0.10.0
 
 * Adapters (Mongoid, MongoMapper, DataMapper) are now separated from the core Sorcery repo and moved under `sorcery-rails` organization. Special thanks to @juike!
 * `current_users` method was removed
 * Added `logged_in?` `logged_out?` `online?` to activity_logging instance methods
-* PayPal provider added to external submodule
+* Added support for PayPal OAuth (thanks to @rubenmoya)
+* Added support for Slack OAuth (thanks to @youzik)
+* Added support for WeChat OAuth (thanks to @Darmody)
 * Deprecated Rails 3
   * Deprecated using `callback_filter` in favor of `callback_action`
   * Added null: false to migrations
+* Added support for Rails 5 (thanks to @kyuden)
+* Added support for Ruby 2.4 (thanks to @kyuden)
+* Added WeChat provider to external submodule.
+* Namespace login lock/unlock methods to fix conflicts with Rails lock/unlock (thanks to @kyuden)
 
 ## 0.9.1
 
@@ -69,7 +142,7 @@
 
 ## 0.8.4
 
-  * Few security fixes in `external` module
+* Few security fixes in `external` module
 
 ## 0.8.3 (yanked because of bad Jeweler release)
 
@@ -77,38 +150,9 @@
 
 * Activity logging feature has a new column called `last_login_from_ip_address` (string type). If you use ActiveRecord, you will have to add this column to DB ([#465](https://github.com/NoamB/sorcery/issues/465))
 
-## 0.8.1
-<!-- TO BE WRITTEN -->
+## 0.7.5-0.8.1
 
-## 0.8.0
-<!-- TO BE WRITTEN -->
-
-## 0.7.13
-<!-- TO BE WRITTEN -->
-
-## 0.7.12
-<!-- TO BE WRITTEN -->
-
-## 0.7.11
-<!-- TO BE WRITTEN -->
-
-## 0.7.10
-<!-- TO BE WRITTEN -->
-
-## 0.7.9
-<!-- TO BE WRITTEN -->
-
-## 0.7.8
-<!-- TO BE WRITTEN -->
-
-## 0.7.7
-<!-- TO BE WRITTEN -->
-
-## 0.7.6
-<!-- TO BE WRITTEN -->
-
-## 0.7.5
-<!-- TO BE WRITTEN -->
+<!-- HERE BE DRAGONS (Changelogs never written) -->
 
 ## 0.7.1-0.7.4
 

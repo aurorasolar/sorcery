@@ -17,9 +17,13 @@ module Sorcery
             end
             merge_remember_me_defaults!
           end
-          Config.login_sources << :login_from_cookie
-          Config.after_login << :remember_me_if_asked_to
-          Config.before_logout << :forget_me!
+          # FIXME: There is likely a more elegant way to safeguard these callbacks.
+          unless Config.login_sources.include?(:login_from_cookie)
+            Config.login_sources << :login_from_cookie
+          end
+          unless Config.before_logout.include?(:forget_me!)
+            Config.before_logout << :forget_me!
+          end
         end
 
         module InstanceMethods
@@ -32,13 +36,13 @@ module Sorcery
           # Clears the cookie, and depending on the value of remember_me_token_persist_globally, may clear the token value.
           def forget_me!
             current_user.forget_me!
-            cookies.delete(:remember_me_token, :domain => Config.cookie_domain)
+            cookies.delete(:remember_me_token, domain: Config.cookie_domain)
           end
 
           # Clears the cookie, and clears the token value.
           def force_forget_me!
             current_user.force_forget_me!
-            cookies.delete(:remember_me_token, :domain => Config.cookie_domain)
+            cookies.delete(:remember_me_token, domain: Config.cookie_domain)
           end
 
           # Override.
@@ -51,20 +55,15 @@ module Sorcery
 
           protected
 
-          # calls remember_me! if a third credential was passed to the login method.
-          # Runs as a hook after login.
-          def remember_me_if_asked_to(user, credentials)
-            remember_me! if ( credentials.size == 3 && credentials[2] && credentials[2] != "0" )
-          end
-
           # Checks the cookie for a remember me token, tried to find a user with that token
           # and logs the user in if found.
           # Runs as a login source. See 'current_user' method for how it is used.
           def login_from_cookie
-            user = cookies.signed[:remember_me_token] && user_class.sorcery_adapter.find_by_remember_me_token(cookies.signed[:remember_me_token])
+            user = cookies.signed[:remember_me_token] && user_class.sorcery_adapter.find_by_remember_me_token(cookies.signed[:remember_me_token]) if defined? cookies
             if user && user.has_remember_me_token?
               set_remember_me_cookie!(user)
               session[:user_id] = user.id.to_s
+              after_remember_me!(user)
               @current_user = user
             else
               @current_user = false
@@ -73,14 +72,13 @@ module Sorcery
 
           def set_remember_me_cookie!(user)
             cookies.signed[:remember_me_token] = {
-              :value => user.send(user.sorcery_config.remember_me_token_attribute_name),
-              :expires => user.send(user.sorcery_config.remember_me_token_expires_at_attribute_name),
-              :httponly => Config.remember_me_httponly,
-              :domain => Config.cookie_domain
+              value: user.send(user.sorcery_config.remember_me_token_attribute_name),
+              expires: user.send(user.sorcery_config.remember_me_token_expires_at_attribute_name),
+              httponly: Config.remember_me_httponly,
+              domain: Config.cookie_domain
             }
           end
         end
-
       end
     end
   end

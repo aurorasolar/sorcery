@@ -38,20 +38,20 @@ module Sorcery
 
           base.send(:include, InstanceMethods)
           base.extend(ClassMethods)
-
         end
 
         module ClassMethods
           # takes a provider and uid and finds a user by them.
-          def load_from_provider(provider,uid)
+          def load_from_provider(provider, uid)
             config = sorcery_config
             authentication = config.authentications_class.sorcery_adapter.find_by_oauth_credentials(provider, uid)
-            user = sorcery_adapter.find_by_id(authentication.send(config.authentications_user_id_attribute_name)) if authentication
+            # Return user if matching authentication found
+            sorcery_adapter.find_by_id(authentication.send(config.authentications_user_id_attribute_name)) if authentication
           end
 
           def create_and_validate_from_provider(provider, uid, attrs)
             user = new(attrs)
-            user.send(sorcery_config.authentications_class.to_s.downcase.pluralize).build(
+            user.send(sorcery_config.authentications_class.name.demodulize.underscore.pluralize).build(
               sorcery_config.provider_uid_attribute_name => uid,
               sorcery_config.provider_attribute_name => provider
             )
@@ -61,7 +61,7 @@ module Sorcery
 
           def create_from_provider(provider, uid, attrs)
             user = new
-            attrs.each do |k,v|
+            attrs.each do |k, v|
               user.send(:"#{k}=", v)
             end
 
@@ -70,7 +70,7 @@ module Sorcery
             end
 
             sorcery_adapter.transaction do
-              user.sorcery_adapter.save(:validate => false)
+              user.sorcery_adapter.save(validate: false)
               sorcery_config.authentications_class.create!(
                 sorcery_config.authentications_user_id_attribute_name => user.id,
                 sorcery_config.provider_attribute_name => provider,
@@ -79,11 +79,26 @@ module Sorcery
             end
             user
           end
+
+          # NOTE: Should this build the authentication as well and return [user, auth]?
+          # Currently, users call this function for the user and call add_provider_to_user after saving
+          def build_from_provider(attrs)
+            user = new
+            attrs.each do |k, v|
+              user.send(:"#{k}=", v)
+            end
+
+            if block_given?
+              return false unless yield user
+            end
+
+            user
+          end
         end
 
         module InstanceMethods
           def add_provider_to_user(provider, uid)
-            authentications = sorcery_config.authentications_class.name.underscore.pluralize
+            authentications = sorcery_config.authentications_class.name.demodulize.underscore.pluralize
             # first check to see if user has a particular authentication already
             if sorcery_adapter.find_authentication_by_oauth_credentials(authentications, provider, uid).nil?
               user = send(authentications).build(sorcery_config.provider_uid_attribute_name => uid,
@@ -95,9 +110,7 @@ module Sorcery
 
             user
           end
-
         end
-
       end
     end
   end

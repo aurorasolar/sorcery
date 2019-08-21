@@ -6,7 +6,8 @@ module Sorcery
           @model.send(:"#{name}=", value)
         end
         primary_key = @model.class.primary_key
-        @model.class.where(:"#{primary_key}" => @model.send(:"#{primary_key}")).update_all(attrs)
+        updated_count = @model.class.where(:"#{primary_key}" => @model.send(:"#{primary_key}")).update_all(attrs)
+        updated_count == 1
       end
 
       def save(options = {})
@@ -29,12 +30,12 @@ module Sorcery
       end
 
       class << self
-        def define_field(name, type, options={})
+        def define_field(name, type, options = {})
           # AR fields are defined through migrations, only validator here
         end
 
-        def define_callback(time, event, method_name, options={})
-          @klass.send "#{time}_#{event}", method_name, options.slice(:if)
+        def define_callback(time, event, method_name, options = {})
+          @klass.send "#{time}_#{event}", method_name, options.slice(:if, :on)
         end
 
         def find_by_oauth_credentials(provider, uid)
@@ -61,11 +62,11 @@ module Sorcery
               condition = @klass.arel_table[attribute].eq(credentials[0])
             end
 
-            if relation.nil?
-              relation = condition
-            else
-              relation = relation.or(condition)
-            end
+            relation = if relation.nil?
+                         condition
+                       else
+                         relation.or(condition)
+                       end
           end
 
           @klass.where(relation).first
@@ -105,7 +106,5 @@ module Sorcery
         end
       end
     end
-
-
   end
 end

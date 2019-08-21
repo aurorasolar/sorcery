@@ -21,6 +21,12 @@ module Sorcery
           require 'sorcery/providers/salesforce'
           require 'sorcery/providers/openid_connect'
           require 'sorcery/providers/paypal'
+          require 'sorcery/providers/slack'
+          require 'sorcery/providers/wechat'
+          require 'sorcery/providers/microsoft'
+          require 'sorcery/providers/instagram'
+          require 'sorcery/providers/auth0'
+          require 'sorcery/providers/line'
 
           Config.module_eval do
             class << self
@@ -31,17 +37,17 @@ module Sorcery
                 @external_providers = providers
 
                 providers.each do |name|
-                  class_eval <<-E
+                  class_eval <<-RUBY, __FILE__, __LINE__ + 1
                     def self.#{name}
-                      @#{name} ||= Sorcery::Providers.const_get('#{name}'.to_s.capitalize).new
+                      @#{name} ||= Sorcery::Providers.const_get('#{name}'.to_s.classify).new
                     end
-                  E
+                  RUBY
                 end
               end
 
               def merge_external_defaults!
                 @defaults.merge!(:@external_providers => [],
-                                 :@ca_file => File.join(File.expand_path(File.dirname(__FILE__)), '../../protocols/certs/ca-bundle.crt'))
+                                 :@ca_file => File.join(__dir__, '../../protocols/certs/ca-bundle.crt'))
               end
             end
             merge_external_defaults!
@@ -54,6 +60,7 @@ module Sorcery
           # save the singleton ProviderClient instance into @provider
           def sorcery_get_provider(provider_name)
             return unless Config.external_providers.include?(provider_name.to_sym)
+
             Config.send(provider_name.to_sym)
           end
 
@@ -62,12 +69,11 @@ module Sorcery
           def sorcery_login_url(provider_name, args = {})
             @provider = sorcery_get_provider provider_name
             sorcery_fixup_callback_url @provider
-            if @provider.respond_to?(:login_url) && @provider.has_callback?
-              @provider.state = args[:state]
-              return @provider.login_url(params, session)
-            else
-              return nil
-            end
+
+            return nil unless @provider.respond_to?(:login_url) && @provider.has_callback?
+
+            @provider.state = args[:state]
+            @provider.login_url(params, session)
           end
 
           # get the user hash from a provider using information from the params and session.
@@ -93,22 +99,22 @@ module Sorcery
           end
 
           # for backwards compatibility
-          def access_token(*args)
+          def access_token(*_args)
             @access_token
           end
-
 
           # this method should be somewhere else.  It only does something once per application per provider.
           def sorcery_fixup_callback_url(provider)
             provider.original_callback_url ||= provider.callback_url
-            if provider.original_callback_url.present? && provider.original_callback_url[0] == '/'
-              uri = URI.parse(request.url.gsub(/\?.*$/,''))
-              uri.path = ''
-              uri.query = nil
-              uri.scheme = 'https' if(request.env['HTTP_X_FORWARDED_PROTO'] == 'https')
-              host = uri.to_s
-              provider.callback_url = "#{host}#{@provider.original_callback_url}"
-            end
+
+            return unless provider.original_callback_url.present? && provider.original_callback_url[0] == '/'
+
+            uri = URI.parse(request.url.gsub(/\?.*$/, ''))
+            uri.path = ''
+            uri.query = nil
+            uri.scheme = 'https' if request.env['HTTP_X_FORWARDED_PROTO'] == 'https'
+            host = uri.to_s
+            provider.callback_url = "#{host}#{@provider.original_callback_url}"
           end
 
           # sends user to authenticate at the provider's website.
@@ -121,37 +127,37 @@ module Sorcery
           def login_from(provider_name, should_remember = false)
             sorcery_fetch_user_hash provider_name
 
-            if user = user_class.load_from_provider(provider_name, @user_hash[:uid].to_s)
-              # we found the user.
-              # clear the session
-              return_to_url = session[:return_to_url]
-              reset_sorcery_session
-              session[:return_to_url] = return_to_url
+            return unless (user = user_class.load_from_provider(provider_name, @user_hash[:uid].to_s))
 
-              config = user_class.sorcery_config
-              if config.update_access_token
-                user.send (config.access_token_attribute_name+'=').to_sym, @user_hash[:access_token]
-                user.save!(:validate => false)
-              end
+            # we found the user.
+            # clear the session
+            return_to_url = session[:return_to_url]
+            reset_sorcery_session
+            session[:return_to_url] = return_to_url
 
-              # sign in the user
-              auto_login(user, should_remember)
-              after_login!(user)
-
-              # return the user
-              user
+            config = user_class.sorcery_config
+            if config.update_access_token
+              user.send (config.access_token_attribute_name+'=').to_sym, @user_hash[:access_token]
+              user.save!(:validate => false)
             end
+
+            # sign in the user
+            auto_login(user, should_remember)
+            after_login!(user)
+
+            # return the user
+            user
           end
 
           # If user is logged, he can add all available providers into his account
           def add_provider_to_user(provider_name)
             sorcery_fetch_user_hash provider_name
-            config = user_class.sorcery_config
+            # config = user_class.sorcery_config # TODO: Unused, remove?
 
             current_user.add_provider_to_user(provider_name.to_s, @user_hash[:uid].to_s)
           end
 
-          # Initialize new user from provider informations.
+          # Initialize new user from provider informations.
           # If a provider doesn't give required informations or username/email is already taken,
           # we store provider/user infos into a session and can be rendered into registration form
           def create_and_validate_from(provider_name)
@@ -162,12 +168,14 @@ module Sorcery
 
             user, saved = user_class.create_and_validate_from_provider(provider_name, @user_hash[:uid], attrs)
 
-            session[:incomplete_user] = {
-              :provider => {config.provider_uid_attribute_name => @user_hash[:uid], config.provider_attribute_name => provider_name},
-              :user_hash => attrs
-            } unless saved
+            unless saved
+              session[:incomplete_user] = {
+                provider: { config.provider_uid_attribute_name => @user_hash[:uid], config.provider_attribute_name => provider_name },
+                user_hash: attrs
+              }
+            end
 
-            return user
+            user
           end
 
           # this method automatically creates a new user from the data in the external user hash.
@@ -188,23 +196,36 @@ module Sorcery
           #
           def create_from(provider_name, &block)
             sorcery_fetch_user_hash provider_name
-            config = user_class.sorcery_config
+            # config = user_class.sorcery_config # TODO: Unused, remove?
 
             attrs = user_attrs(@provider.user_info_mapping, @user_hash)
             @user = user_class.create_from_provider(provider_name, @user_hash[:uid], attrs, &block)
           end
 
+          # follows the same patterns as create_from, but builds the user instead of creating
+          def build_from(provider_name, &block)
+            sorcery_fetch_user_hash provider_name
+            # config = user_class.sorcery_config # TODO: Unused, remove?
+
+            attrs = user_attrs(@provider.user_info_mapping, @user_hash)
+            @user = user_class.build_from_provider(attrs, &block)
+          end
+
           def user_attrs(user_info_mapping, user_hash)
             attrs = {}
-            user_info_mapping.each do |k,v|
-              if (varr = v.split("/")).size > 1
-                attribute_value = varr.inject(user_hash[:user_info]) {|hash, value| hash[value]} rescue nil
+            user_info_mapping.each do |k, v|
+              if (varr = v.split('/')).size > 1
+                attribute_value = begin
+                                    varr.inject(user_hash[:user_info]) { |hash, value| hash[value] }
+                                  rescue StandardError
+                                    nil
+                                  end
                 attribute_value.nil? ? attrs : attrs.merge!(k => attribute_value)
               else
                 attrs.merge!(k => user_hash[:user_info][v])
               end
             end
-            return attrs
+            attrs
           end
         end
       end
