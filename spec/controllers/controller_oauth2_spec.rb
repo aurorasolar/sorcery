@@ -471,9 +471,9 @@ describe SorceryController, active_record: true, type: :controller do
     allow(id_token).to receive(:raw_attributes) {
        {
          iss: 'accounts.google.com',
-         aud: '999220227102-jr200rnb4inkmln67vvo56kf86i1bnch.apps.googleusercontent.com',
+         aud: 'eYVNBjBDi33aa9GkA3w',
          sub: '123',
-         azp: '999220227102-jr200rnb4inkmln67vvo56kf86i1bnch.apps.googleusercontent.com',
+         azp: 'eYVNBjBDi33aa9GkA3w',
          iat: 1443571350,
          exp: 1443574950
        }
@@ -554,8 +554,8 @@ describe SorceryController, active_record: true, type: :controller do
     sorcery_controller_external_property_set(:line, :key, "eYVNBjBDi33aa9GkA3w")
     sorcery_controller_external_property_set(:line, :secret, "XpbeSdCoaKSmQGSeokz5qcUATClRW5u08QWNfv71N8")
     sorcery_controller_external_property_set(:line, :callback_url, "http://blabla.com")
-    sorcery_controller_external_property_set(:openid_connect, :key, "999220227102-1us4vq0k6t0orb3hoqepftd5u8ef8vec.apps.googleusercontent.com")
-    sorcery_controller_external_property_set(:openid_connect, :secret, "Y0qFZfsjzTQbQSSc2dPVMTbb")
+    sorcery_controller_external_property_set(:openid_connect, :key, "eYVNBjBDi33aa9GkA3w")
+    sorcery_controller_external_property_set(:openid_connect, :secret, "XpbeSdCoaKSmQGSeokz5qcUATClRW5u08QWNfv71N8")
     sorcery_controller_external_property_set(:openid_connect, :callback_url, "http://blabla.com")
     sorcery_controller_external_property_set(:openid_connect, :auth_path, "https://accounts.google.com/o/oauth2/auth")
     sorcery_controller_external_property_set(:openid_connect, :token_url, "https://accounts.google.com/o/oauth2/token")
