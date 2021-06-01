@@ -9,7 +9,7 @@ module Sorcery
     #   ...
     #
     class Openid_connect < Base
-
+      GET_PUBLIC_KEYS_TIMEOUT = ENV.fetch("SORCERY_GET_PUBLIC_KEYS_TIMEOUT", 5).to_f
 
       attr_accessor :auth_path, :scope, :token_url, :user_info_path,
       :discovery_document_url, :use_discovery_document, :jwks_uri, :client_auth_in_body,
@@ -92,6 +92,9 @@ module Sorcery
 
           if @use_discovery_document
             conn = Faraday.new(@discovery_document_url)
+            conn.options.timeout = GET_PUBLIC_KEYS_TIMEOUT # open/read timeout in seconds
+            conn.options.open_timeout = GET_PUBLIC_KEYS_TIMEOUT # connection open timeout in seconds
+
             response = conn.get('')
             json = JSON.parse(response.body)
             jwks_url = json['jwks_uri']
@@ -100,6 +103,9 @@ module Sorcery
           end
 
           conn = Faraday.new(jwks_url)
+          conn.options.timeout = GET_PUBLIC_KEYS_TIMEOUT # open/read timeout in seconds
+          conn.options.open_timeout = GET_PUBLIC_KEYS_TIMEOUT # connection open timeout in seconds
+
           response = conn.get('')
           jwk_set = JSON::JWK::Set.new(
                         JSON.parse(
